@@ -17,6 +17,7 @@ TCP 的连接建立是一个三次握手过程，目的是为了通信双方确�
 
 ## 四次挥手
 
+![四次挥手](https://github.com/vettel-qin/blog/blob/master/assets/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png)
 第一次挥手：客户端发送一个 FIN 报文，报文中会指定一个序列号。此时客户端处于 FIN_WAIT1 状态
 即发出连接释放报文段（FIN=1,序号 seq=u）,并停止再发送数据，主动关闭 TCP 连接，进入 FIN_WAIT1(终止等待 1)状态，等待服务器的确认。
 
