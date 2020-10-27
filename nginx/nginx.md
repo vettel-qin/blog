@@ -56,6 +56,69 @@ firewall-cmd --reload      # 重启防火墙，永久打开端口需要reload一
 
 为了加快网站的解析速度，可以把动态页面和静态页面由不同的服务器来解析，加快解析速度，降低原来单个服务器的压力
 
+# 典型配置
+
+```
+user  nginx;                        # 运行用户，默认即是nginx，可以不进行设置
+worker_processes  1;                # Nginx 进程数，一般设置为和 CPU 核数一样
+error_log  /var/log/nginx/error.log warn;   # Nginx 的错误日志存放目录
+pid        /var/run/nginx.pid;      # Nginx 服务启动时的 pid 存放位置
+
+events {
+  use epoll;     # 使用epoll的I/O模型(如果你不知道Nginx该使用哪种轮询方法，会自动选择一个最适合你操作系统的)
+  orker_connections 1024;   # 每个进程允许最大并发数
+}
+
+http {   # 配置使用最频繁的部分，代理、缓存、日志定义等绝大多数功能和第三方模块的配置都在这里设置
+  # 设置日志模式
+  log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+  access_log  /var/log/nginx/access.log  main;   # Nginx访问日志存放位置
+
+  sendfile            on;   # 开启高效传输模式
+  tcp_nopush          on;   # 减少网络报文段的数量
+  tcp_nodelay         on;
+  keepalive_timeout   65;   # 保持连接的时间，也叫超时时间，单位秒
+  types_hash_max_size 2048;
+
+  include             /etc/nginx/mime.types;      # 文件扩展名与类型映射表
+  default_type        application/octet-stream;   # 默认文件类型
+
+  include /etc/nginx/conf.d/*.conf;   # 加载子配置项
+
+  server {
+    listen       80;       # 配置监听的端口
+    server_name  localhost;    # 配置的域名
+
+    location / {
+      root   /usr/share/nginx/html;  # 网站根目录
+      index  index.html index.htm;   # 默认首页文件
+      deny 172.168.22.11;   # 禁止访问的ip地址，可以为all
+      allow 172.168.33.44；# 允许访问的ip地址，可以为all
+    }
+
+    error_page 500 502 503 504 /50x.html;  # 默认50x对应的访问页面
+    error_page 400 404 error.html;   # 同上
+  }
+}
+```
+
+server 块可以包含多个 location 块，location 指令用于匹配 uri，语法：
+
+```
+location [ = | ~ | ~* | ^~] uri {
+	...
+}
+```
+
+指令后面：
+= 精确匹配路径，用于不含正则表达式的 uri 前，如果匹配成功，不再进行后续的查找；
+^~ 用于不含正则表达式的 uri 前，表示如果该符号后面的字符是最佳匹配，采用该规则，不再进行后续的查找；
+~ 表示用该符号后面的正则去匹配路径，区分大小写；
+~\* 表示用该符号后面的正则去匹配路径，不区分大小写。跟 ~ 优先级都比较低，如有多个 location 的正则能匹配的话，则使用正则表达式最长的那个；
+
 # pm2
 
 安装 pm2 并创建软链接
@@ -83,3 +146,60 @@ ln -s /usr/local/nodejs/bin/pm2 /usr/local/bin/pm2
 | 查看所有进程/应用日志 | pm2 logs                              |
 | 重新启动进程/应用     | pm2 restart abc                       |
 | 重新启动所有进程/应用 | pm2 restart all                       |
+
+# 实例
+
+## 反向代理
+
+比如我们监听 8888 端口，然后把访问不同路径的请求进行反向代理：
+把访问 http://106.55.246.116:8888/edu 的请求转发到 http://106.55.246.116:9999
+把访问 http://106.55.246.116:8888/vod 的请求转发到 http://106.55.246.116:9991
+
+```
+server {
+  listen 8888;
+  server_name 106.55.246.116;
+
+  location ~ /edu/ {
+    proxy_pass http://106.55.246.116:9999;
+  }
+
+  location ~ /vod/ {
+    proxy_pass http://106.55.246.116:9991;
+  }
+}
+```
+
+反向代理还有一些其他的指令，可以了解一下：
+
+proxy_set_header：在将客户端请求发送给后端服务器之前，更改来自客户端的请求头信息；
+proxy_connect_timeout：配置 Nginx 与后端代理服务器尝试建立连接的超时时间；
+proxy_read_timeout：配置 Nginx 向后端服务器组发出 read 请求后，等待相应的超时时间；
+proxy_send_timeout：配置 Nginx 向后端服务器组发出 write 请求后，等待相应的超时时间；
+proxy_redirect：用于修改后端服务器返回的响应头中的 Location 和 Refresh。
+
+## 负载均衡
+
+Nginx 提供了好几种分配方式，默认为轮询，就是轮流来。有以下几种分配方式：
+轮询，默认方式，每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务挂了，能自动剔除；
+weight，权重分配，指定轮询几率，权重越高，在被访问的概率越大，用于后端服务器性能不均的情况；
+ip_hash，每个请求按访问 IP 的 hash 结果分配，这样每个访客固定访问一个后端服务器，可以解决动态网页 session 共享问题。负载均衡每次请求都会重新定位到服务器集群中的某一个，那么已经登录某一个服务器的用户再重新定位到另一个服务器，其登录信息将会丢失，这样显然是不妥的；
+fair（第三方），按后端服务器的响应时间分配，响应时间短的优先分配，依赖第三方插件 nginx-upstream-fair，需要先安装；
+
+修改 nginx.conf
+
+```
+  upstream myserver {
+    server 106.55.246.116:9999;
+    server 106.55.246.116:9991;
+    # fair/ip_hash
+  }
+
+  server {
+    ...
+    location / {
+      proxy_pass http://myserver;
+      ...
+    }
+  }
+```
