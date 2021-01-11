@@ -55,5 +55,11 @@ docker container start xxx # xxx 为上一条命令运行得到的结果
 当容器运行后，可以通过如下命令进入容器内部：
 ```
 docker container exec -it xxx /bin/bash # xxx 为容器ID
+
+dokcer ps -a 查询正在运行的container
+
+docker exec -it 容器ID /bin/bash 进入容器
+
+exit 退出容器
 ```
 复制代码原理实际上是启动了容器内的/bin/bash，此时你就可以通过bash shell与容器内交互了。就像远程连接了SSH一样
