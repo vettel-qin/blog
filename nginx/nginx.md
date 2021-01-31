@@ -1,28 +1,42 @@
-# Nginx 常用命令
+# 1. nginx简介
+nginx是一个高性能的HTTP和反向代理服务器，特点是占有内存少，并发能力强。专为性能优化而生的，有报告表明能支持高达50，000个并发连接数。
 
-查看版本
+# 2. 正向/反向代理
+(1). 正向代理
+
+# 3. 负载均衡
+
+# 4. 动静分离
+
+# 5. Nginx 常用命令
+使用nginx操作命令前提条件，必须进入nginx的目录/usr/local/nginx/sbin
+1. 查看版本
 
 ```
   ./nginx -v
 ```
 
-启动
+2. 启动
 
 ```
   ./nginx
 ```
 
-关闭（有两种方式）
+3. 关闭（有两种方式）
 
 ```
  ./nginx -s stop
  ./nginx -s quit
 ```
 
-重启
+4. 重启
 
 ```
   ./nginx -s reload
+```
+5. 查看进程
+```
+ps -ef | grep nginx
 ```
 
 ```
@@ -30,6 +44,9 @@ systemctl start firewalld  # 开启防火墙
 systemctl stop firewalld   # 关闭防火墙
 systemctl status firewalld # 查看防火墙开启状态，显示running则是正在运行
 firewall-cmd --reload      # 重启防火墙，永久打开端口需要reload一下
+firewall-cmd --list-all    # 查看开放的端口号
+firewall-cmd --add-port80/tcp --permanent 设置开放的端口
+firewall-cmd --add-server=http --permanent
 ```
 
 # 正向代理
@@ -57,16 +74,27 @@ firewall-cmd --reload      # 重启防火墙，永久打开端口需要reload一
 为了加快网站的解析速度，可以把动态页面和静态页面由不同的服务器来解析，加快解析速度，降低原来单个服务器的压力
 
 # 典型配置
+位置： /usr/local/nginx/conf
+
+组成：
+有三部分组成：
+全局块
+从配置文件开始到event块之间的内容，主要设置一些影响nginx服务器整体运行的配置指令
+event块
+event块涉及的指令主要影响nginx服务器与用户的网络连接
+http块
+包括http全局块和server块
+
 
 ```
 user  nginx;                        # 运行用户，默认即是nginx，可以不进行设置
-worker_processes  1;                # Nginx 进程数，一般设置为和 CPU 核数一样
+worker_processes  1;                # Nginx 进程数，一般设置为和 CPU 核数一样。值越大表示支持的并发处理量越多
 error_log  /var/log/nginx/error.log warn;   # Nginx 的错误日志存放目录
 pid        /var/run/nginx.pid;      # Nginx 服务启动时的 pid 存放位置
 
 events {
   use epoll;     # 使用epoll的I/O模型(如果你不知道Nginx该使用哪种轮询方法，会自动选择一个最适合你操作系统的)
-  orker_connections 1024;   # 每个进程允许最大并发数
+  worker_connections 1024;   # 每个进程允许最大并发数,或支持的最大连接数
 }
 
 http {   # 配置使用最频繁的部分，代理、缓存、日志定义等绝大多数功能和第三方模块的配置都在这里设置
@@ -95,8 +123,8 @@ http {   # 配置使用最频繁的部分，代理、缓存、日志定义等绝
     location / {
       root   /usr/share/nginx/html;  # 网站根目录
       index  index.html index.htm;   # 默认首页文件
-      deny 172.168.22.11;   # 禁止访问的ip地址，可以为all
-      allow 172.168.33.44；# 允许访问的ip地址，可以为all
+      deny xxx.xxx.xx.xx;   # 禁止访问的ip地址，可以为all
+      allow xxx.xxx.xx.xx   # 允许访问的ip地址，可以为all
     }
 
     error_page 500 502 503 504 /50x.html;  # 默认50x对应的访问页面
@@ -113,7 +141,7 @@ location [ = | ~ | ~* | ^~] uri {
 }
 ```
 
-指令后面：
+localtion指令说明：
 = 精确匹配路径，用于不含正则表达式的 uri 前，如果匹配成功，不再进行后续的查找；
 ^~ 用于不含正则表达式的 uri 前，表示如果该符号后面的字符是最佳匹配，采用该规则，不再进行后续的查找；
 ~ 表示用该符号后面的正则去匹配路径，区分大小写；
@@ -152,20 +180,20 @@ ln -s /usr/local/nodejs/bin/pm2 /usr/local/bin/pm2
 ## 反向代理
 
 比如我们监听 8888 端口，然后把访问不同路径的请求进行反向代理：
-把访问 http://106.55.246.116:8888/edu 的请求转发到 http://106.55.246.116:9999
-把访问 http://106.55.246.116:8888/vod 的请求转发到 http://106.55.246.116:9991
+把访问 http://ip地址:8888/edu 的请求转发到 http://ip地址:9999
+把访问 http://ip地址:8888/vod 的请求转发到 http://ip地址:9991
 
 ```
 server {
   listen 8888;
-  server_name 106.55.246.116;
+  server_name ip地址;
 
   location ~ /edu/ {
-    proxy_pass http://106.55.246.116:9999;
+    proxy_pass http://ip地址:9999;
   }
 
   location ~ /vod/ {
-    proxy_pass http://106.55.246.116:9991;
+    proxy_pass http://ip地址:9991;
   }
 }
 ```
@@ -190,8 +218,8 @@ fair（第三方），按后端服务器的响应时间分配，响应时间短�
 
 ```
   upstream myserver {
-    server 106.55.246.116:9999;
-    server 106.55.246.116:9991;
+    server ip地址:9999;
+    server ip地址:9991;
     # fair/ip_hash
   }
 

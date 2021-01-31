@@ -63,3 +63,56 @@ docker exec -it 容器ID /bin/bash 进入容器
 exit 退出容器
 ```
 复制代码原理实际上是启动了容器内的/bin/bash，此时你就可以通过bash shell与容器内交互了。就像远程连接了SSH一样
+
+
+Docker 服务相关命令
+
+启动docker
+systemctl  start docker
+查看docker服务的状态
+systemctl status docker
+停止docker
+systemctl stop docker
+重启docker
+systemctl restart docker
+开机启动docker
+systemctl enable docker
+
+Docker镜像相关命令
+查看本地镜像
+docker images
+查看所有镜像的ID
+docker images -q
+搜索镜像
+docker search
+拉取镜像
+docker pull
+删除本地镜像
+docker rmi xxx镜像ID
+删除所有本地镜像
+docker rmi docker images -q
+
+Docker 容器相关命令
+查看容器
+docker ps -a(运行或不运行都可以查到)
+创建容器
+docker run -i(表示保持一直运行) -t(表示分配一个伪终端) --name=(表示起名字) xxx镜像 /bin/bash(进入容器)
+或docker run -i(表示保持一直运行) -d(表示后台创建) --name=(表示起名字) xxx镜像
+
+进入容器
+docker exec -it 容器ID /bin/bash
+
+退出容器
+exit
+
+启动容器
+docker start 容器ID
+
+停止容器
+docker stop 容器ID
+
+删除容器
+docker rm 容器ID
+
+查看容器信息
+docker inspect 容器ID
