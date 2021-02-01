@@ -54,3 +54,31 @@ stretch: 让flex项目沿着侧轴适应flex容器可用的空间。默认
 flex-start: 让多行flex项目靠侧轴开始边缘（顶部对齐）
 flex-end： 让多行flex项目靠侧轴结束边缘（底部对齐）
 center：让多行flex项目在侧轴中间
+
+2. flex项目属性
+```
+order | flex-grow | flex-shrink | flex-basis
+```
+
+(1). order排序：用整数值来定义排列顺序，数值小的排在前面。可以为负值。
+
+(2). flex-grow: 定义元素的扩展比率
+
+(3). flex-shrink: 定义元素的收缩比率
+
+(4). flex-basis: 定义元素的默认基值
+
+flex是flex-grow、flex-shrink和flex-basis三个属性的速记（简写）。
+
+align-self
+align-self 属性用于设置弹性元素自身在侧轴（纵轴）方向上的对齐方式。
+
+```
+align-self: auto | flex-start | flex-end | center | baseline | stretch
+```
+
+1 url解析
+2.缓存检测 强 expires 过期时间  cache-control: 从
+协商缓存：last-modify文件最后修改时候 ETag  if-modify-since:1 
+3. Dns解析 浏览器
+4. tcp三次握手SYN = 1 seq=x ack=x+1 ACK=1 seq=y

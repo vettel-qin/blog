@@ -77,3 +77,12 @@ vh: 1vh等于视口高度的1%;
 
 缺点：
 存在一些兼容性问题，有些浏览器不支持。
+
+2. flex:1的完整写法是？分别是什么意思？
+flex属性是flex-grow、flow-shrink、flex-basis的简写。默认值为0、1、auto;
+flex:1的完整写法是
+```
+flex-grow: 1;
+flex-shrink: 1;
+flex-basis: 0%;
+```
