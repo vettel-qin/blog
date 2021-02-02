@@ -157,3 +157,37 @@ const proto = { age: 18 };
 Object.setPrototypeOf(obj, proto);
 console.log(obj.age); // 18
 ```
+
+8. 在Object原型上新增了keys,values,entries三个方法
+Object.keys()方法用来获取对象的所有键组成的数组
+语法
+```
+Object.keys(obj);
+```
+栗子
+```
+const obj = { 0: 'a', 1: 'b', 2: 'c' };
+console.log(Object.keys(obj)); // console: ['0', '1', '2']
+```
+
+Object.values()方法用来获取对象的所有值组成的数组语法
+语法
+```
+Object.values(obj);
+```
+栗子
+```
+const obj = { 0: 'a', 1: 'b', 2: 'c' };
+console.log(Object.values(obj)); // console: ['a', 'b', 'c']
+```
+
+Object.values()方法用来获取对象的所有键值对组成的数组
+语法
+```
+Object.entries(obj);
+```
+栗子
+```
+const obj = { 0: 'a', 1: 'b', 2: 'c' };
+console.log(Object.entries(obj)); // console: [ ['0', 'a'], ['1', 'b'], ['2', 'c'] ]
+```
